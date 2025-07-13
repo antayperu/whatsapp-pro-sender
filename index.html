@@ -430,29 +430,45 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Google Analytics (reemplazar con tu ID) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WBG7B6E2V0"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'GA_MEASUREMENT_ID');
+        gtag('config', 'G-WBG7B6E2V0');
         
-        // Función para trackear descargas
+        // Eventos personalizados para tracking
         function trackDownload() {
             gtag('event', 'download', {
                 'event_category': 'engagement',
-                'event_label': 'demo_download'
+                'event_label': 'demo_download',
+                'value': 1
             });
+            console.log('Download tracked!');
         }
         
-        // Smooth scroll para los enlaces
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+        function trackWhatsApp() {
+            gtag('event', 'whatsapp_click', {
+                'event_category': 'contact',
+                'event_label': 'whatsapp_button',
+                'value': 1
             });
+            console.log('WhatsApp click tracked!');
+        }
+        
+        // Tracking automático de scroll
+        let scrollTracked = false;
+        window.addEventListener('scroll', function() {
+            if (!scrollTracked && window.scrollY > 500) {
+                gtag('event', 'scroll_deep', {
+                    'event_category': 'engagement',
+                    'event_label': 'scrolled_500px',
+                    'value': 1
+                });
+                scrollTracked = true;
+                console.log('Deep scroll tracked!');
+            }
         });
     </script>
 </body>
