@@ -379,6 +379,46 @@
         </div>
     </section>
 
+    
+<!-- SECCIÓN COMPRAR LICENCIA COMPLETA -->
+    <section class="py-5" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+        <div class="container text-center">
+            <h2 class="mb-4">🔓 ¿Comprobaste que Funciona Perfectamente?</h2>
+            <p class="lead mb-4">
+                Desbloquea mensajes ILIMITADOS con la licencia completa
+            </p>
+            
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <div class="card bg-light text-dark">
+                        <div class="card-body">
+                            <h4 class="text-success">💰 LICENCIA COMPLETA</h4>
+                            <h2 class="mb-3">$197 USD <small class="text-muted">pago único</small></h2>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li>✅ Mensajes ilimitados (sin restricciones)</li>
+                                <li>✅ Todas las funciones desbloqueadas</li>
+                                <li>✅ Actualizaciones gratuitas de por vida</li>
+                                <li>✅ Soporte técnico prioritario</li>
+                                <li>✅ Garantía 60 días</li>
+                            </ul>
+                            
+                            <button class="btn btn-success btn-lg w-100 pulse" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#checkoutModal"
+                                    onclick="trackPurchaseIntent()">
+                                💳 COMPRAR LICENCIA COMPLETA
+                            </button>
+                            
+                            <p class="small text-muted mt-3">
+                                💳 PayPal • 🏦 Transferencia • 📱 Yape/Plin
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <!-- CONTACTO SECTION -->
     <section class="contact-section py-5">
         <div class="container text-center">
@@ -471,5 +511,376 @@
             }
         });
     </script>
+
+<!-- MODAL DE CHECKOUT COMPLETO -->
+<div class="modal fade" id="checkoutModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-unlock"></i> 
+                    Desbloquear Versión Completa - $197 USD
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- PASO 1: Información del Cliente -->
+                <div id="step1" class="checkout-step">
+                    <h6 class="mb-3">📋 Paso 1: Tus Datos</h6>
+                    <form id="customerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre Completo *</label>
+                                <input type="text" class="form-control" id="customerName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="customerEmail" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">WhatsApp *</label>
+                                <input type="text" class="form-control" id="customerWhatsApp" 
+                                       placeholder="+51987654321" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">País</label>
+                                <select class="form-control" id="customerCountry">
+                                    <option value="PE">🇵🇪 Perú</option>
+                                    <option value="CO">🇨🇴 Colombia</option>
+                                    <option value="MX">🇲🇽 México</option>
+                                    <option value="CL">🇨🇱 Chile</option>
+                                    <option value="OTHER">🌎 Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Hardware ID -->
+                        <div class="mb-3">
+                            <label class="form-label">🔧 Hardware ID de tu Computadora *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="hardwareId" 
+                                       placeholder="Ejemplo: A1B2C3D4E5F6G7H8" required>
+                                <button type="button" class="btn btn-outline-primary" onclick="showHardwareInstructions()">
+                                    ❓ ¿Cómo obtenerlo?
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                Necesario para generar tu licencia personalizada
+                            </small>
+                        </div>
+                        
+                        <!-- Instrucciones Hardware ID -->
+                        <div id="hardwareInstructions" class="alert alert-info" style="display: none;">
+                            <h6>📱 ¿Cómo obtener tu Hardware ID?</h6>
+                            <ol>
+                                <li>Abre <strong>WhatsApp Pro Sender</strong> en tu computadora</li>
+                                <li>Haz clic en <strong>"🔓 Activar Versión Completa"</strong></li>
+                                <li>Aparecerá tu Hardware ID automáticamente</li>
+                                <li>Cópialo y pégalo aquí</li>
+                            </ol>
+                            <p class="mb-0">
+                                <strong>Nota:</strong> Este ID es único para tu computadora y permite que la licencia 
+                                funcione solo en tu equipo.
+                            </p>
+                        </div>
+                        
+                        <button type="button" class="btn btn-success w-100" onclick="goToStep2()">
+                            Continuar al Pago →
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- PASO 2: Métodos de Pago -->
+                <div id="step2" class="checkout-step" style="display: none;">
+                    <h6 class="mb-3">💳 Paso 2: Método de Pago</h6>
+                    
+                    <!-- Resumen -->
+                    <div class="alert alert-success">
+                        <h6>✅ Datos Confirmados:</h6>
+                        <p class="mb-1"><strong>Cliente:</strong> <span id="summaryName"></span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="summaryEmail"></span></p>
+                        <p class="mb-0"><strong>Hardware ID:</strong> <span id="summaryHardware"></span></p>
+                    </div>
+                    
+                    <!-- Métodos de Pago -->
+                    <div class="row g-3">
+                        <!-- PayPal -->
+                        <div class="col-md-4">
+                            <div class="card h-100 payment-method" onclick="selectPaymentMethod('paypal')">
+                                <div class="card-body text-center">
+                                    <i class="fab fa-paypal fa-3x text-primary mb-3"></i>
+                                    <h6>PayPal</h6>
+                                    <p class="small text-muted">Pago seguro internacional</p>
+                                    <span class="badge bg-success">Recomendado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transferencia Bancaria -->
+                        <div class="col-md-4">
+                            <div class="card h-100 payment-method" onclick="selectPaymentMethod('bank')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-university fa-3x text-success mb-3"></i>
+                                    <h6>Transferencia</h6>
+                                    <p class="small text-muted">Banco directo</p>
+                                    <span class="badge bg-info">Seguro</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Yape/Plin -->
+                        <div class="col-md-4" id="digitalWalletOption">
+                            <div class="card h-100 payment-method" onclick="selectPaymentMethod('digital')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-mobile-alt fa-3x text-warning mb-3"></i>
+                                    <h6>Yape / Plin</h6>
+                                    <p class="small text-muted">Solo Perú</p>
+                                    <span class="badge bg-warning">Instantáneo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instrucciones de Pago -->
+                    <div id="paymentInstructions" class="mt-4" style="display: none;">
+                        <!-- PayPal Instructions -->
+                        <div id="paypalInstructions" class="payment-instructions">
+                            <div class="alert alert-primary">
+                                <h6><i class="fab fa-paypal"></i> Pago con PayPal</h6>
+                                <p><strong>Instrucciones:</strong></p>
+                                <ol>
+                                    <li>Envía $197 USD a: <strong>cortega@antayperu.com</strong></li>
+                                    <li>En el mensaje incluye tu Hardware ID</li>
+                                    <li>Recibirás tu licencia en 30 minutos</li>
+                                </ol>
+                                
+                                <div class="text-center">
+                                    <a href="https://www.paypal.com/send" target="_blank" class="btn btn-primary btn-lg">
+                                        <i class="fab fa-paypal"></i> Abrir PayPal
+                                    </a>
+                                </div>
+                                
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <strong>📋 Datos para PayPal:</strong><br>
+                                    <strong>Email:</strong> cortega@antayperu.com<br>
+                                    <strong>Monto:</strong> $197 USD<br>
+                                    <strong>Concepto:</strong> WhatsApp Pro Sender - [TU_HARDWARE_ID]
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bank Instructions -->
+                        <div id="bankInstructions" class="payment-instructions">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-university"></i> Transferencia Bancaria</h6>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="p-3 bg-light rounded mb-3">
+                                            <strong>📋 Datos de Transferencia:</strong><br>
+                                            <strong>Banco:</strong> BCP<br>
+                                            <strong>Cuenta:</strong> 194-123456789-0-12<br>
+                                            <strong>CCI:</strong> 002-194-123456789012-34<br>
+                                            <strong>Titular:</strong> Carlos Ortega<br>
+                                            <strong>Monto:</strong> S/ 740 (aprox $197 USD)
+                                        </div>
+                                        
+                                        <strong>📝 Después de transferir:</strong>
+                                        <ol>
+                                            <li>Envía captura del voucher a WhatsApp: +51 921 566 036</li>
+                                            <li>Incluye tu Hardware ID en el mensaje</li>
+                                            <li>Recibirás licencia en 2-6 horas</li>
+                                        </ol>
+                                        
+                                        <div class="text-center">
+                                            <a href="https://wa.me/51921566036" class="btn btn-success">
+                                                📱 Enviar Voucher por WhatsApp
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Digital Wallet Instructions -->
+                        <div id="digitalInstructions" class="payment-instructions">
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-mobile-alt"></i> Yape / Plin</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-light rounded">
+                                            <strong>📱 Número para Yape/Plin:</strong><br>
+                                            <h4 class="text-center text-primary">+51 921 566 036</h4>
+                                            <strong>💰 Monto:</strong> S/ 740<br>
+                                            <strong>Concepto:</strong> WhatsApp Pro Sender
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>📝 Después del pago:</strong>
+                                        <ol>
+                                            <li>Envía captura a WhatsApp: +51 921 566 036</li>
+                                            <li>Incluye tu Hardware ID</li>
+                                            <li>Licencia en 30 minutos</li>
+                                        </ol>
+                                        
+                                        <div class="text-center">
+                                            <a href="https://wa.me/51921566036" class="btn btn-warning">
+                                                📱 Contactar WhatsApp
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-secondary" onclick="goToStep1()">
+                            ← Volver a Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div class="text-center w-100">
+                    <small class="text-muted">
+                        🔒 Compra segura • 💚 Garantía 60 días • 📞 Soporte incluido
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ESTILOS Y FUNCIONES DEL MODAL -->
+<style>
+.payment-method {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.payment-method:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #28a745;
+}
+
+.payment-method.selected {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.payment-instructions {
+    display: none;
+}
+
+.checkout-step {
+    min-height: 400px;
+}
+</style>
+
+<script>
+// Función para mostrar instrucciones Hardware ID
+function showHardwareInstructions() {
+    const instructions = document.getElementById('hardwareInstructions');
+    instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+}
+
+// Función para ir al paso 2
+function goToStep2() {
+    // Validar formulario
+    const form = document.getElementById('customerForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Capturar datos
+    const customerData = {
+        name: document.getElementById('customerName').value,
+        email: document.getElementById('customerEmail').value,
+        whatsapp: document.getElementById('customerWhatsApp').value,
+        country: document.getElementById('customerCountry').value,
+        hardwareId: document.getElementById('hardwareId').value
+    };
+    
+    // Mostrar resumen
+    document.getElementById('summaryName').textContent = customerData.name;
+    document.getElementById('summaryEmail').textContent = customerData.email;
+    document.getElementById('summaryHardware').textContent = customerData.hardwareId;
+    
+    // Mostrar/ocultar métodos según país
+    if (customerData.country !== 'PE') {
+        document.getElementById('digitalWalletOption').style.display = 'none';
+    } else {
+        document.getElementById('digitalWalletOption').style.display = 'block';
+    }
+    
+    // Cambiar paso
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+}
+
+// Función para volver al paso 1
+function goToStep1() {
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+}
+
+// Función para seleccionar método de pago
+function selectPaymentMethod(method) {
+    // Limpiar selecciones
+    document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Ocultar todas las instrucciones
+    document.querySelectorAll('.payment-instructions').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Seleccionar método
+    event.target.closest('.payment-method').classList.add('selected');
+    
+    // Mostrar instrucciones correspondientes
+    document.getElementById('paymentInstructions').style.display = 'block';
+    
+    switch(method) {
+        case 'paypal':
+            document.getElementById('paypalInstructions').style.display = 'block';
+            break;
+        case 'bank':
+            document.getElementById('bankInstructions').style.display = 'block';
+            break;
+        case 'digital':
+            document.getElementById('digitalInstructions').style.display = 'block';
+            break;
+    }
+    
+    // Analytics tracking
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'payment_method_selected', {
+            'event_category': 'checkout',
+            'event_label': method,
+            'value': 197
+        });
+    }
+}
+
+// Función para trackear intención de compra
+function trackPurchaseIntent() {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase_intent', {
+            'event_category': 'checkout',
+            'event_label': 'modal_opened',
+            'value': 197
+        });
+    }
+}
+</script>
 </body>
 </html>
