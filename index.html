@@ -684,7 +684,7 @@
                                             <strong>Cuenta:</strong> 19473489211024 <br>
                                             <strong>CCI:</strong> 00219417348921102491<br>
                                             <strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera<br>
-                                            <strong>Monto:</strong> S/ 740 (aprox $25 USD)
+                                            <strong>Monto:</strong> S/ 94 (aprox $25 USD)
                                         </div>
                                         
                                         <strong>📝 Después de transferir:</strong>
@@ -713,7 +713,7 @@
                                         <div class="p-3 bg-light rounded">
                                             <strong>📱 Número para Yape/Plin:</strong><br>
                                             <h4 class="text-center text-primary">+51 921 566 036</h4>
-                                            <strong>💰 Monto:</strong> S/ 740<br>
+                                            <strong>💰 Monto:</strong> S/ 94<br>
                                             <strong>Concepto:</strong> WhatsApp Pro Sender
                                         </div>
                                     </div>
@@ -866,7 +866,7 @@ function selectPaymentMethod(method) {
         gtag('event', 'payment_method_selected', {
             'event_category': 'checkout',
             'event_label': method,
-            'value': 197
+            'value': 25
         });
     }
 }
@@ -877,10 +877,131 @@ function trackPurchaseIntent() {
         gtag('event', 'purchase_intent', {
             'event_category': 'checkout',
             'event_label': 'modal_opened',
-            'value': 197
+            'value': 25
         });
     }
 }
+
+
+// ===== SISTEMA DE CONVERSIÓN AUTOMÁTICA =====
+// 🎯 CONFIGURACIÓN FÁCIL - SOLO CAMBIAR ESTOS 2 VALORES:
+const PRECIO_USD = 25;        // ← Cambiar precio aquí (sin símbolo $)
+const TIPO_CAMBIO_PEN = 3.75; // ← Actualizar tipo de cambio aquí
+
+// ===== NO TOCAR EL CÓDIGO DE ABAJO =====
+// Calcular automáticamente el precio en soles
+const PRECIO_SOLES = Math.round(PRECIO_USD * TIPO_CAMBIO_PEN);
+
+// Función para actualizar TODOS los precios automáticamente
+function actualizarPreciosAutomatico() {
+    console.log(`💰 Actualizando precios: $${PRECIO_USD} USD = S/ ${PRECIO_SOLES}`);
+    
+    try {
+        // 1. Actualizar título del modal
+        const modalTitle = document.querySelector('#checkoutModal .modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = `<i class="fas fa-unlock"></i> Desbloquear Versión Completa - $${PRECIO_USD} USD`;
+        }
+        
+        // 2. Actualizar precio en tarjeta principal
+        const precioCard = document.querySelector('.card h2');
+        if (precioCard) {
+            precioCard.innerHTML = `$${PRECIO_USD} USD <small class="text-muted">pago único</small>`;
+        }
+        
+        // 3. Actualizar transferencia bancaria
+        const transferenciaMonto = document.querySelector('#bankInstructions strong');
+        if (transferenciaMonto) {
+            // Buscar el elemento que contiene "Monto:"
+            const elementoMonto = Array.from(document.querySelectorAll('#bankInstructions strong'))
+                .find(el => el.textContent.includes('Monto:'));
+            if (elementoMonto && elementoMonto.parentElement) {
+                const contenido = elementoMonto.parentElement.innerHTML;
+                const nuevoContenido = contenido.replace(
+                    /<strong>Monto:<\/strong>[^<]*/,
+                    `<strong>Monto:</strong> S/ ${PRECIO_SOLES} (aprox $${PRECIO_USD} USD)`
+                );
+                elementoMonto.parentElement.innerHTML = nuevoContenido;
+            }
+        }
+        
+        // 4. Actualizar Yape/Plin
+        const yapeMonto = document.querySelector('#digitalInstructions strong');
+        if (yapeMonto) {
+            const elementoMontoYape = Array.from(document.querySelectorAll('#digitalInstructions strong'))
+                .find(el => el.textContent.includes('Monto:'));
+            if (elementoMontoYape && elementoMontoYape.parentElement) {
+                const contenido = elementoMontoYape.parentElement.innerHTML;
+                const nuevoContenido = contenido.replace(
+                    /<strong>Monto:<\/strong>[^<]*/,
+                    `<strong>Monto:</strong> S/ ${PRECIO_SOLES}`
+                );
+                elementoMontoYape.parentElement.innerHTML = nuevoContenido;
+            }
+        }
+        
+        // 5. Actualizar PayPal
+        const paypalMonto = document.querySelector('#paypalInstructions ol');
+        if (paypalMonto) {
+            const primerLi = paypalMonto.querySelector('li');
+            if (primerLi) {
+                primerLi.innerHTML = `Envía $${PRECIO_USD} USD a: <strong>cortega@antayperu.com</strong>`;
+            }
+        }
+        
+        // 6. Actualizar datos PayPal en la caja
+        const paypalDatos = document.querySelector('#paypalInstructions .bg-light.rounded');
+        if (paypalDatos) {
+            const contenido = paypalDatos.innerHTML;
+            const nuevoContenido = contenido.replace(
+                /<strong>Monto:<\/strong>[^<]*/,
+                `<strong>Monto:</strong> $${PRECIO_USD} USD`
+            );
+            paypalDatos.innerHTML = nuevoContenido;
+        }
+        
+        // 7. Actualizar Analytics
+        window.PRECIO_PRODUCTO = PRECIO_USD;
+        
+        console.log(`✅ Precios actualizados correctamente`);
+        
+    } catch (error) {
+        console.error('❌ Error actualizando precios:', error);
+    }
+}
+
+// Ejecutar cuando la página termine de cargar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Iniciando sistema de conversión automática...');
+    // Esperar un poco para que todo esté listo
+    setTimeout(actualizarPreciosAutomatico, 1000);
+});
+
+// También ejecutar cuando se abra el modal de checkout
+document.addEventListener('click', function(e) {
+    if (e.target && (e.target.matches('[data-bs-target="#checkoutModal"]') || e.target.closest('[data-bs-target="#checkoutModal"]'))) {
+        console.log('🛒 Modal de checkout abierto - actualizando precios...');
+        setTimeout(actualizarPreciosAutomatico, 500);
+    }
+});
+
+// Función para cambiar precios desde consola (para testing)
+function cambiarPrecio(nuevoPrecioUSD, nuevoTipoCambio = TIPO_CAMBIO_PEN) {
+    window.PRECIO_USD = nuevoPrecioUSD;
+    window.TIPO_CAMBIO_PEN = nuevoTipoCambio;
+    window.PRECIO_SOLES = Math.round(nuevoPrecioUSD * nuevoTipoCambio);
+    
+    console.log(`💱 Precio cambiado a: $${nuevoPrecioUSD} USD = S/ ${window.PRECIO_SOLES}`);
+    
+    // Actualizar variables globales
+    const script = document.querySelector('script');
+    if (script) {
+        // Re-ejecutar actualización
+        actualizarPreciosAutomatico();
+    }
+}
+
+console.log(`💰 Sistema cargado: $${PRECIO_USD} USD = S/ ${PRECIO_SOLES} (TC: ${TIPO_CAMBIO_PEN})`);
 </script>
 </body>
 </html>
