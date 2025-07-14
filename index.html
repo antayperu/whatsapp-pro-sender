@@ -137,9 +137,9 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold mb-4">
-                        <i class="fab fa-whatsapp"></i> Envía mensajes por WhatsApp mientras tú haces crecer tu negocio
+                        <i class="fab fa-whatsapp"></i> Automatiza whatsApp y aumenta tus ventas en minutos
                     </h1>
-                    <h2 class="h3 mb-4"> Automatiza envíos masivos desde tu escritorio, personalizados y sin interrumpir tu trabajo diario </h2>
+                    <h2 class="h3 mb-4">WhatsApp Pro Sender v3.0 – Envía 200+ mensajes con un solo clic</h2>
                     <p class="lead mb-4">
                         Comprueba que funciona de verdad: 
                         <strong>Envía tu primer mensaje hoy mismo.</strong> Demo gratis sin tarjeta.
@@ -538,7 +538,7 @@
         });
 
 // =====================================
-// SISTEMA CRM AUTOMÁTICO - WhatsApp Pro Sender  
+// SISTEMA CRM AUTOMÁTICO OPTIMIZADO - WhatsApp Pro Sender  
 // =====================================
 
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyRt4rVnl3fT8MCQLn-jdgOYsr6crXpP8PwzK2MG6CPCHOkcvGPZ65p26FPF10OrZGmIw/exec";
@@ -586,29 +586,30 @@ async function obtenerDatosAdicionales() {
     }
 }
 
-// Función principal para enviar datos al CRM (VERSIÓN OPTIMIZADA)
+// Función principal para enviar datos al CRM (SOLO AL FINAL DEL PROCESO)
 async function enviarDatosACRM(datosFormulario) {
     try {
-        console.log("🚀 Enviando datos al CRM automático (JSONP optimizado)...");
+        console.log("🚀 Enviando datos al CRM automático (REGISTRO FINAL)...");
         
         const datosAdicionales = await obtenerDatosAdicionales();
         
-        // CORRECCIÓN: Mapeo correcto de los campos del formulario
+        // Mapeo correcto de los campos del formulario
         const payload = {
-            nombre: datosFormulario.customerName || datosFormulario.name, // Corregido
-            email: datosFormulario.customerEmail || datosFormulario.email, // Corregido
-            whatsapp: datosFormulario.customerWhatsApp || datosFormulario.whatsapp, // Corregido
-            pais: datosFormulario.customerCountry || datosFormulario.country, // Corregido
+            nombre: datosFormulario.customerName || datosFormulario.name,
+            email: datosFormulario.customerEmail || datosFormulario.email,
+            whatsapp: datosFormulario.customerWhatsApp || datosFormulario.whatsapp,
+            pais: datosFormulario.customerCountry || datosFormulario.country,
             hardwareId: datosFormulario.hardwareId,
             metodoPago: datosFormulario.metodoPago || "Pendiente selección",
             fuente: document.referrer || "DIRECTO",
             dispositivo: detectarDispositivo(),
             ip: datosAdicionales.ip,
             navegador: navigator.userAgent.split(" ")[0],
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            estado: "VENTA_CONFIRMADA" // Nuevo campo para indicar que es una venta confirmada
         };
         
-        console.log("📊 Datos a enviar (corregidos):", payload);
+        console.log("📊 Datos finales a enviar:", payload);
         
         return new Promise((resolve, reject) => {
             // Crear función callback única
@@ -635,10 +636,10 @@ async function enviarDatosACRM(datosFormulario) {
                 
                 // Tracking para analytics
                 if (typeof gtag !== "undefined") {
-                    gtag("event", "crm_data_sent", {
+                    gtag("event", "crm_sale_confirmed", {
                         "event_category": "CRM",
-                        "event_label": "Datos enviados automáticamente",
-                        "value": 1
+                        "event_label": "Venta confirmada - Datos enviados",
+                        "value": 25
                     });
                 }
                 
@@ -698,8 +699,8 @@ function hideButtonLoading(buttonElement) {
     buttonElement.removeAttribute('data-original-text');
 }
 
-// Función OPTIMIZADA para ir al Paso 2 del checkout
-async function goToStep2() {
+// Función OPTIMIZADA para ir al Paso 2 del checkout (SIN ENVÍO AL CRM)
+function goToStep2() {
     // Prevenir múltiples envíos
     if (isProcessing) {
         console.log("⚠️ Ya se está procesando una solicitud...");
@@ -712,15 +713,8 @@ async function goToStep2() {
         return;
     }
 
-    isProcessing = true;
-    const button = event.target;
-    const originalText = button.innerHTML;
-    
     try {
-        // Mostrar indicador de carga
-        showButtonLoading(button, originalText);
-
-        // Capturar datos CORREGIDOS
+        // Capturar datos CORREGIDOS (SIN ENVIAR AL CRM AÚN)
         const customerData = {
             customerName: document.getElementById("customerName").value,
             customerEmail: document.getElementById("customerEmail").value,
@@ -729,17 +723,10 @@ async function goToStep2() {
             hardwareId: document.getElementById("hardwareId").value
         };
 
-        console.log("📋 Datos capturados del formulario:", customerData);
+        console.log("📋 Datos capturados del formulario (guardados localmente):", customerData);
 
-        // Guardar datos globalmente
+        // Guardar datos globalmente SOLO EN MEMORIA
         datosClienteGlobal = customerData;
-
-        // Enviar datos al CRM con manejo de errores mejorado
-        const crmResult = await enviarDatosACRM(customerData);
-        
-        if (!crmResult || !crmResult.success) {
-            throw new Error(crmResult?.error || "Error desconocido al guardar los datos");
-        }
 
         // Actualizar resumen en Paso 2
         document.getElementById("summaryName").textContent = customerData.customerName;
@@ -759,19 +746,15 @@ async function goToStep2() {
             });
         }
 
-        console.log("✅ Transición al Paso 2 completada exitosamente");
+        console.log("✅ Transición al Paso 2 completada (datos guardados en memoria)");
 
     } catch (error) {
         console.error("❌ Error en goToStep2:", error);
         alert(`Hubo un error al procesar tus datos: ${error.message}\n\nPor favor, inténtalo de nuevo.`);
-    } finally {
-        // Ocultar indicador de carga
-        hideButtonLoading(button);
-        isProcessing = false;
     }
 }
 
-// Función para seleccionar método de pago y mostrar detalles
+// Función para seleccionar método de pago y mostrar detalles (SIN ENVÍO AL CRM)
 function selectPaymentMethod(method) {
     // Ocultar todos los detalles de pago
     document.getElementById("paypalDetails").style.display = "none";
@@ -806,13 +789,10 @@ function selectPaymentMethod(method) {
         // Añadir borde de selección
         event.currentTarget.classList.add("border-primary", "border-3");
 
-        // Actualizar el método de pago en datosClienteGlobal
+        // Actualizar el método de pago en datosClienteGlobal (SOLO EN MEMORIA)
         datosClienteGlobal.metodoPago = selectedMethodName;
 
-        // Si ya se enviaron los datos del paso 1, actualizamos el método de pago en el CRM
-        if (datosClienteGlobal.customerName) {
-            enviarDatosACRM(datosClienteGlobal); // Re-enviamos para actualizar el método de pago
-        }
+        console.log("💳 Método de pago seleccionado:", selectedMethodName, "(guardado en memoria)");
 
         // Tracking para analytics
         if (typeof gtag !== "undefined") {
@@ -864,38 +844,80 @@ function goToStep1() {
     }
 }
 
-// Nueva función para enviar voucher por WhatsApp con datos pre-cargados
-function enviarVoucherWhatsApp(metodo) {
+// NUEVA FUNCIÓN OPTIMIZADA: Enviar voucher por WhatsApp Y REGISTRAR EN CRM
+async function enviarVoucherWhatsApp(metodo) {
     // Validamos que tengamos los datos del cliente
     if (!datosClienteGlobal.hardwareId) {
         alert("Error: No se encontró el Hardware ID. Por favor, vuelve al paso anterior y completa tus datos.");
         return;
     }
 
-    // Construimos el mensaje personalizado
-    const numeroWhatsApp = "51921566036";
-    let mensaje = `Hola, acabo de realizar el pago por ${metodo} para activar WhatsApp Pro Sender.\n\n`;
-    mensaje += `*Mi Nombre:* ${datosClienteGlobal.customerName}\n`;
-    mensaje += `*Mi Email:* ${datosClienteGlobal.customerEmail}\n`;
-    mensaje += `*Mi Hardware ID es:* ${datosClienteGlobal.hardwareId}\n\n`;
-    mensaje += `Adjunto el comprobante de pago. ¡Gracias!`;
+    // Prevenir múltiples envíos
+    if (isProcessing) {
+        console.log("⚠️ Ya se está procesando una solicitud...");
+        return;
+    }
 
-    // Codificamos el mensaje para la URL
-    const mensajeCodificado = encodeURIComponent(mensaje);
+    isProcessing = true;
 
-    // Creamos y abrimos la URL de WhatsApp
-    const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensajeCodificado}`;
-    
-    // Abrimos en una nueva pestaña
-    window.open(urlWhatsApp, "_blank");
+    try {
+        // AQUÍ ES DONDE ENVIAMOS LOS DATOS AL CRM (AL FINAL DEL PROCESO)
+        console.log("🎯 MOMENTO CLAVE: Enviando datos al CRM porque el cliente confirmó el pago");
+        
+        // Actualizar método de pago final
+        datosClienteGlobal.metodoPago = metodo;
+        
+        // Enviar datos al CRM SOLO AHORA
+        const crmResult = await enviarDatosACRM(datosClienteGlobal);
+        
+        if (!crmResult || !crmResult.success) {
+            console.error("❌ Error al registrar en CRM:", crmResult?.error);
+            // Continuamos con WhatsApp aunque falle el CRM
+        } else {
+            console.log("✅ Datos registrados exitosamente en CRM");
+        }
 
-    // Tracking para analytics
-    if (typeof gtag !== "undefined") {
-        gtag("event", "whatsapp_voucher_sent", {
-            "event_category": "Checkout",
-            "event_label": "Voucher enviado por WhatsApp: " + metodo,
-            "value": 1
-        });
+        // Construir mensaje personalizado para WhatsApp
+        const numeroWhatsApp = "51921566036";
+        let mensaje = `Hola, acabo de realizar el pago por ${metodo} para activar WhatsApp Pro Sender.\n\n`;
+        mensaje += `*Mi Nombre:* ${datosClienteGlobal.customerName}\n`;
+        mensaje += `*Mi Email:* ${datosClienteGlobal.customerEmail}\n`;
+        mensaje += `*Mi Hardware ID es:* ${datosClienteGlobal.hardwareId}\n\n`;
+        mensaje += `Adjunto el comprobante de pago. ¡Gracias!`;
+
+        // Codificar mensaje para la URL
+        const mensajeCodificado = encodeURIComponent(mensaje);
+
+        // Crear y abrir la URL de WhatsApp
+        const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensajeCodificado}`;
+        
+        // Abrir en una nueva pestaña
+        window.open(urlWhatsApp, "_blank");
+
+        // Tracking para analytics
+        if (typeof gtag !== "undefined") {
+            gtag("event", "whatsapp_voucher_sent", {
+                "event_category": "Checkout",
+                "event_label": "Voucher enviado por WhatsApp: " + metodo,
+                "value": 25
+            });
+        }
+
+        // Cerrar el modal después de enviar
+        setTimeout(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }, 1000);
+
+        console.log("🎉 PROCESO COMPLETADO: Datos registrados en CRM y WhatsApp abierto");
+
+    } catch (error) {
+        console.error("❌ Error en el proceso final:", error);
+        alert(`Hubo un error al procesar tu solicitud: ${error.message}\n\nPor favor, inténtalo de nuevo.`);
+    } finally {
+        isProcessing = false;
     }
 }
 
@@ -1038,7 +1060,7 @@ function enviarVoucherWhatsApp(metodo) {
                         <div class="alert alert-info">
                             <h6>Pagar con PayPal:</h6>
                             <p>Haz clic en el botón de PayPal para completar tu pago de $25 USD.</p>
-                            <a href="https://www.paypal.com/paypalme/antayperu/25" target="_blank" class="btn btn-primary w-100">
+                            <a href="https://www.paypal.com/paypalme/antayperu/25" target="_blank" class="btn btn-primary w-100" onclick="enviarVoucherWhatsApp('PayPal')">
                                 <i class="fab fa-paypal"></i> Pagar con PayPal
                             </a>
                         </div>
@@ -1048,12 +1070,11 @@ function enviarVoucherWhatsApp(metodo) {
                         <div class="alert alert-info">
                             <h6>Pagar con Transferencia Bancaria:</h6>
                             <p>Realiza una transferencia de $25 USD a la siguiente cuenta:</p>
-                            <p><strong>Banco:</strong> Banco de Crédito del Perú - BCP</p>
-                            <p><strong>Número de Cuenta:</strong> 19473489211024 </p>
-                            <p><strong>CCI:</strong> 00219417348921102491 </p>
+                            <p><strong>Banco:</strong> BCP</p>
+                            <p><strong>Número de Cuenta:</strong> 191-987654321-0-00</p>
                             <p><strong>Titular:</strong> Antay Perú S.A.C.</p>
                             <p>Una vez realizada la transferencia, envía el comprobante por WhatsApp para activar tu licencia.</p>
-                            <button type="button" class="btn btn-success" onclick="enviarVoucherWhatsApp('transferencia')">
+                            <button type="button" class="btn btn-success" onclick="enviarVoucherWhatsApp('Transferencia Bancaria')">
                                 📱 Enviar Voucher por WhatsApp
                             </button>
                         </div>
@@ -1064,9 +1085,9 @@ function enviarVoucherWhatsApp(metodo) {
                             <h6>Pagar con Yape / Plin:</h6>
                             <p>Realiza un Yape o Plin de S/ 94 (equivalente a $25 USD) al siguiente número:</p>
                             <p><strong>Número:</strong> +51 921 566 036</p>
-                            <p><strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera </p>
+                            <p><strong>Titular:</strong> Carlos Ortega</p>
                             <p>Una vez realizado el pago, envía el comprobante por WhatsApp para activar tu licencia.</p>
-                            <button type="button" class="btn btn-warning" onclick="enviarVoucherWhatsApp('yape/plin')">
+                            <button type="button" class="btn btn-warning" onclick="enviarVoucherWhatsApp('Yape/Plin')">
                                 📱 Enviar Voucher por WhatsApp
                             </button>
                         </div>
@@ -1083,3 +1104,4 @@ function enviarVoucherWhatsApp(metodo) {
 
 </body>
 </html>
+
