@@ -747,6 +747,20 @@ function trackPurchaseIntent() {
     }, 1000);
 }
 
+// Función para volver al Paso 1 del checkout
+function goToStep1() {
+    // Ocultar Paso 2 y mostrar Paso 1
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+
+    // Tracking para analytics
+    gtag('event', 'checkout_back_to_step1', {
+        'event_category': 'Checkout',
+        'event_label': 'Volver a Paso 1 - Datos',
+        'value': 1
+    });
+}
+
 // Nueva función para enviar voucher por WhatsApp con datos pre-cargados
 function enviarVoucherWhatsApp(metodo) {
     // Validamos que tengamos los datos del cliente
@@ -924,9 +938,8 @@ function enviarVoucherWhatsApp(metodo) {
                             <h6>Pagar con Transferencia Bancaria:</h6>
                             <p>Realiza una transferencia de $25 USD a la siguiente cuenta:</p>
                             <p><strong>Banco:</strong> BCP</p>
-                            <p><strong>Número de Cuenta:</strong> 19473489211024</p>
-                            <p><strong>CCI:</strong> 00219417348921102491</p>
-                            <p><strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera</p>
+                            <p><strong>Número de Cuenta:</strong> 191-987654321-0-00</p>
+                            <p><strong>Titular:</strong> Antay Perú S.A.C.</p>
                             <p>Una vez realizada la transferencia, envía el comprobante por WhatsApp para activar tu licencia.</p>
                             <button type="button" class="btn btn-success" onclick="enviarVoucherWhatsApp('transferencia')">
                                 📱 Enviar Voucher por WhatsApp
@@ -939,7 +952,7 @@ function enviarVoucherWhatsApp(metodo) {
                             <h6>Pagar con Yape / Plin:</h6>
                             <p>Realiza un Yape o Plin de S/ 94 (equivalente a $25 USD) al siguiente número:</p>
                             <p><strong>Número:</strong> +51 921 566 036</p>
-                            <p><strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera</p>
+                            <p><strong>Titular:</strong> Carlos Ortega</p>
                             <p>Una vez realizado el pago, envía el comprobante por WhatsApp para activar tu licencia.</p>
                             <button type="button" class="btn btn-warning" onclick="enviarVoucherWhatsApp('yape/plin')">
                                 📱 Enviar Voucher por WhatsApp
