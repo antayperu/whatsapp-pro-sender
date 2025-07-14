@@ -549,10 +549,10 @@ async function obtenerDatosAdicionales() {
     }
 }
 
-// Función principal para enviar datos al CRM
+// Función principal para enviar datos al CRM (VERSIÓN JSONP)
 async function enviarDatosACRM(datosFormulario) {
     try {
-        console.log('🚀 Enviando datos al CRM automático...');
+        console.log('🚀 Enviando datos al CRM automático (JSONP)...');
         
         const datosAdicionales = await obtenerDatosAdicionales();
         
@@ -572,30 +572,49 @@ async function enviarDatosACRM(datosFormulario) {
         
         console.log('📊 Datos a enviar:', payload);
         
-        const response = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
+        return new Promise((resolve, reject) => {
+            // Crear función callback única
+            const callbackName = 'crmCallback_' + Date.now();
+            
+            // Definir callback global
+            window[callbackName] = function(resultado) {
+                console.log('✅ Respuesta del CRM:', resultado);
+                
+                if (resultado.duplicado) {
+                    console.warn('⚠️ ALERTA: Hardware ID duplicado detectado');
+                }
+                
+                // Tracking para analytics
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'crm_data_sent', {
+                        'event_category': 'CRM',
+                        'event_label': 'Datos enviados automáticamente',
+                        'value': 1
+                    });
+                }
+                
+                // Limpiar callback
+                delete window[callbackName];
+                document.head.removeChild(script);
+                
+                resolve(resultado);
+            };
+            
+            // Crear script JSONP
+            const script = document.createElement('script');
+            const url = WEBHOOK_URL + 
+                '?callback=' + callbackName + 
+                '&data=' + encodeURIComponent(JSON.stringify(payload));
+            
+            script.src = url;
+            script.onerror = function() {
+                delete window[callbackName];
+                document.head.removeChild(script);
+                reject(new Error('Error de red'));
+            };
+            
+            document.head.appendChild(script);
         });
-        
-        const resultado = await response.json();
-        
-        if (resultado.duplicado) {
-            console.warn('⚠️ ALERTA: Hardware ID duplicado detectado');
-        }
-        
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'crm_data_sent', {
-                'event_category': 'CRM',
-                'event_label': 'Datos enviados automáticamente',
-                'value': 1
-            });
-        }
-        
-        console.log('✅ Respuesta del CRM:', resultado);
-        return resultado;
         
     } catch (error) {
         console.error('❌ Error enviando datos al CRM:', error);
