@@ -898,6 +898,19 @@ function goToStep2() {
         country: document.getElementById('customerCountry').value,
         hardwareId: document.getElementById('hardwareId').value
     };
+
+    // ✅ AGREGAR ESTA LÍNEA PARA ENVIAR AL CRM:
+    enviarDatosACRM({
+        nombre: customerData.name,
+        email: customerData.email,
+        whatsapp: customerData.whatsapp,
+        pais: customerData.country,
+        hardwareId: customerData.hardwareId,
+        metodoPago: 'Seleccionando método'
+    });
+    
+    // Mostrar resumen (código existente continúa...)
+    document.getElementById('summaryName').textContent = customerData.name;
     
     // Mostrar resumen
     document.getElementById('summaryName').textContent = customerData.name;
