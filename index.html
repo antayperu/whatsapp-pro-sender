@@ -539,6 +539,7 @@
 
 // =====================================
 // SISTEMA CRM AUTOMÁTICO OPTIMIZADO PARA ANDROID - WhatsApp Pro Sender  
+// VERSIÓN FINAL CON SOLUCIÓN DEFINITIVA
 // =====================================
 
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyRt4rVnl3fT8MCQLn-jdgOYsr6crXpP8PwzK2MG6CPCHOkcvGPZ65p26FPF10OrZGmIw/exec";
@@ -586,10 +587,10 @@ async function obtenerDatosAdicionales() {
     }
 }
 
-// NUEVA FUNCIÓN PRINCIPAL PARA ENVIAR DATOS AL CRM - USANDO FETCH API (COMPATIBLE CON ANDROID)
+// FUNCIÓN DEFINITIVA PARA ANDROID: Enviar datos al CRM usando Content-Type text/plain
 async function enviarDatosACRM(datosFormulario) {
     try {
-        console.log("🚀 Enviando datos al CRM automático (MÉTODO FETCH - ANDROID COMPATIBLE)...");
+        console.log("🚀 Enviando datos al CRM (MÉTODO DEFINITIVO PARA ANDROID)...");
         
         const datosAdicionales = await obtenerDatosAdicionales();
         
@@ -606,52 +607,54 @@ async function enviarDatosACRM(datosFormulario) {
             ip: datosAdicionales.ip,
             navegador: navigator.userAgent.split(" ")[0],
             timestamp: new Date().toISOString(),
-            estado: "VENTA_CONFIRMADA" // Nuevo campo para indicar que es una venta confirmada
+            estado: "VENTA_CONFIRMADA"
         };
         
         console.log("📊 Datos finales a enviar:", payload);
         
-        // MÉTODO ALTERNATIVO: Usar FormData para envío POST (más compatible con móviles)
-        const formData = new FormData();
-        formData.append('data', JSON.stringify(payload));
-        
-        // Configuración de la solicitud fetch optimizada para móviles
-        const fetchOptions = {
+        // SOLUCIÓN DEFINITIVA: Usar Content-Type text/plain para evitar preflight CORS
+        const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
-            body: formData,
-            mode: 'no-cors', // Importante para evitar problemas de CORS en móviles
+            headers: {
+                'Content-Type': 'text/plain', // Clave para evitar preflight en móviles
+            },
+            body: JSON.stringify(payload), // Enviar como string JSON
+            mode: 'cors', // Ahora podemos usar cors porque no hay preflight
             cache: 'no-cache',
             redirect: 'follow'
-        };
-        
-        // Crear timeout manual para mayor control
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout: La conexión tardó demasiado')), 20000); // 20 segundos
         });
         
-        // Realizar la solicitud con timeout
-        const fetchPromise = fetch(WEBHOOK_URL, fetchOptions);
-        
-        const response = await Promise.race([fetchPromise, timeoutPromise]);
-        
         console.log("✅ Solicitud enviada exitosamente al CRM");
+        console.log("📡 Response status:", response.status);
+        
+        // Intentar leer la respuesta
+        try {
+            const responseText = await response.text();
+            console.log("📄 Response text:", responseText);
+            
+            // Verificar si la respuesta contiene indicadores de éxito
+            if (responseText.includes('success') || responseText.includes('guardado') || response.ok) {
+                console.log("✅ Confirmación de éxito recibida del servidor");
+            }
+        } catch (readError) {
+            console.log("⚠️ No se pudo leer la respuesta, pero la solicitud se envió");
+        }
         
         // Tracking para analytics
         if (typeof gtag !== "undefined") {
             gtag("event", "crm_sale_confirmed", {
                 "event_category": "CRM",
-                "event_label": "Venta confirmada - Datos enviados (Fetch API)",
+                "event_label": "Venta confirmada - Datos enviados (Método definitivo)",
                 "value": 25
             });
         }
         
-        // Como usamos mode: 'no-cors', no podemos leer la respuesta, pero asumimos éxito
         return { success: true, message: "Datos enviados exitosamente" };
         
     } catch (error) {
         console.error("❌ Error enviando datos al CRM:", error);
         
-        // Intentar método de respaldo usando imagen como pixel de tracking
+        // Método de respaldo usando imagen como pixel de tracking
         try {
             console.log("🔄 Intentando método de respaldo...");
             await enviarDatosRespaldo(datosFormulario);
@@ -923,7 +926,7 @@ function goToStep1() {
     }
 }
 
-// NUEVA FUNCIÓN OPTIMIZADA PARA ANDROID: Enviar voucher por WhatsApp Y REGISTRAR EN CRM
+// FUNCIÓN FINAL OPTIMIZADA PARA ANDROID: Enviar voucher por WhatsApp Y REGISTRAR EN CRM
 async function enviarVoucherWhatsApp(metodo) {
     // Validamos que tengamos los datos del cliente
     if (!datosClienteGlobal.hardwareId) {
@@ -952,7 +955,7 @@ async function enviarVoucherWhatsApp(metodo) {
         // Actualizar método de pago final
         datosClienteGlobal.metodoPago = metodo;
         
-        // Enviar datos al CRM SOLO AHORA (usando método compatible con Android)
+        // Enviar datos al CRM SOLO AHORA (usando método definitivo para Android)
         const crmResult = await enviarDatosACRM(datosClienteGlobal);
         
         if (!crmResult || !crmResult.success) {
