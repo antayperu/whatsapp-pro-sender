@@ -520,8 +520,8 @@
 
 const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyRt4rVnl3fT8MCQLn-jdgOYsr6crXpP8PwzK2MG6CPCHOkcvGPZ65p26FPF10OrZGmIw/exec';
 
-        
-       
+let datosClienteGlobal = {}; // Para guardar los datos del formulario
+
 // Función para detectar dispositivo
 function detectarDispositivo() {
     const width = window.innerWidth;
@@ -621,7 +621,159 @@ async function enviarDatosACRM(datosFormulario) {
         return { success: false, error: error.message };
     }
 }
+
+// Función para mostrar/ocultar instrucciones de Hardware ID
+function showHardwareInstructions() {
+    const instructionsDiv = document.getElementById('hardwareInstructions');
+    if (instructionsDiv.style.display === 'none') {
+        instructionsDiv.style.display = 'block';
+    } else {
+        instructionsDiv.style.display = 'none';
+    }
+}
+
+// Función para ir al Paso 2 del checkout
+async function goToStep2() {
+    const form = document.getElementById('customerForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    // Capturar datos
+    const customerData = {
+        name: document.getElementById('customerName').value,
+        email: document.getElementById('customerEmail').value,
+        whatsapp: document.getElementById('customerWhatsApp').value,
+        country: document.getElementById('customerCountry').value,
+        hardwareId: document.getElementById('hardwareId').value
+    };
+
+    datosClienteGlobal = customerData; // Guardamos los datos globalmente
+
+    // Enviar datos al CRM
+    const crmResult = await enviarDatosACRM(customerData);
+    if (!crmResult.success) {
+        alert('Hubo un error al guardar tus datos. Por favor, inténtalo de nuevo.');
+        return;
+    }
+
+    // Actualizar resumen en Paso 2
+    document.getElementById('summaryName').textContent = customerData.name;
+    document.getElementById('summaryEmail').textContent = customerData.email;
+    document.getElementById('summaryHardware').textContent = customerData.hardwareId;
+
+    // Mostrar Paso 2 y ocultar Paso 1
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+
+    // Tracking para analytics
+    gtag('event', 'checkout_step2', {
+        'event_category': 'Checkout',
+        'event_label': 'Paso 2 - Seleccionar Pago',
+        'value': 1
+    });
+}
+
+// Función para seleccionar método de pago y mostrar detalles
+function selectPaymentMethod(method) {
+    // Ocultar todos los detalles de pago
+    document.getElementById('paypalDetails').style.display = 'none';
+    document.getElementById('bankDetails').style.display = 'none';
+    document.getElementById('yapePlinDetails').style.display = 'none';
+
+    // Quitar selección de todos los métodos
+    document.querySelectorAll('.payment-method').forEach(card => {
+        card.classList.remove('border-primary', 'border-3');
+    });
+
+    // Mostrar el detalle del método seleccionado
+    let selectedDetailsDiv;
+    let selectedMethodName = '';
+    switch (method) {
+        case 'paypal':
+            selectedDetailsDiv = document.getElementById('paypalDetails');
+            selectedMethodName = 'PayPal';
+            break;
+        case 'bank':
+            selectedDetailsDiv = document.getElementById('bankDetails');
+            selectedMethodName = 'Transferencia Bancaria';
+            break;
+        case 'yapeplin':
+            selectedDetailsDiv = document.getElementById('yapePlinDetails');
+            selectedMethodName = 'Yape/Plin';
+            break;
+    }
+
+    if (selectedDetailsDiv) {
+        selectedDetailsDiv.style.display = 'block';
+        // Añadir borde de selección
+        event.currentTarget.classList.add('border-primary', 'border-3');
+
+        // Actualizar el método de pago en datosClienteGlobal antes de enviar al CRM
+        datosClienteGlobal.metodoPago = selectedMethodName;
+
+        // Si ya se enviaron los datos del paso 1, actualizamos el método de pago en el CRM
+        // Esto es útil si el usuario cambia de método de pago después de la primera selección
+        if (datosClienteGlobal.nombre) { // Si ya tenemos datos del cliente, significa que ya se envió el paso 1
+            enviarDatosACRM(datosClienteGlobal); // Re-enviamos para actualizar el método de pago
+        }
+
+        // Tracking para analytics
+        gtag('event', 'payment_method_selected', {
+            'event_category': 'Checkout',
+            'event_label': 'Método de Pago Seleccionado: ' + selectedMethodName,
+            'value': 1
+        });
+    }
+}
+
+// Función para trackear intención de compra (cuando se abre el modal)
+function trackPurchaseIntent() {
+    gtag('event', 'purchase_intent', {
+        'event_category': 'Checkout',
+        'event_label': 'Modal de checkout abierto',
+        'value': 1
+    });
+    console.log('Modal de checkout abierto - actualizando precios...');
+    // Simular actualización de precios (si fuera dinámico)
+    setTimeout(() => {
+        console.log('Precios actualizados correctamente');
+        gtag('event', 'price_updated', {
+            'event_category': 'Checkout',
+            'event_label': 'Precios actualizados: $25 USD',
+            'value': 25
+        });
+    }, 1000);
+}
+
+// Nueva función para enviar voucher por WhatsApp con datos pre-cargados
+function enviarVoucherWhatsApp(metodo) {
+    // Validamos que tengamos los datos del cliente
+    if (!datosClienteGlobal.hardwareId) {
+        alert('Error: No se encontró el Hardware ID. Por favor, vuelve al paso anterior y completa tus datos.');
+        return;
+    }
+
+    // Construimos el mensaje personalizado
+    const numeroWhatsApp = '51921566036';
+    let mensaje = `Hola, acabo de realizar el pago por ${metodo} para activar WhatsApp Pro Sender.\n\n`;
+    mensaje += `*Mi Nombre:* ${datosClienteGlobal.name}\n`;
+    mensaje += `*Mi Email:* ${datosClienteGlobal.email}\n`;
+    mensaje += `*Mi Hardware ID es:* ${datosClienteGlobal.hardwareId}\n\n`;
+    mensaje += `Adjunto el comprobante de pago. ¡Gracias!`;
+
+    // Codificamos el mensaje para la URL
+    const mensajeCodificado = encodeURIComponent(mensaje);
+
+    // Creamos y abrimos la URL de WhatsApp
+    const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensajeCodificado}`;
     
+    // Abrimos en una nueva pestaña
+    window.open(urlWhatsApp, '_blank');
+}
+
+
     </script>
 
 <!-- MODAL DE CHECKOUT COMPLETO -->
@@ -745,385 +897,63 @@ async function enviarDatosACRM(datosFormulario) {
                         
                         <!-- Yape/Plin -->
                         <div class="col-md-4" id="digitalWalletOption">
-                            <div class="card h-100 payment-method" onclick="selectPaymentMethod('digital')">
+                            <div class="card h-100 payment-method" onclick="selectPaymentMethod('yapeplin')">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-mobile-alt fa-3x text-warning mb-3"></i>
+                                    <i class="fas fa-mobile-alt fa-3x text-danger mb-3"></i>
                                     <h6>Yape / Plin</h6>
-                                    <p class="small text-muted">Solo Perú</p>
-                                    <span class="badge bg-warning">Instantáneo</span>
+                                    <p class="small text-muted">Pago móvil Perú</p>
+                                    <span class="badge bg-warning">Rápido</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Instrucciones de Pago -->
-                    <div id="paymentInstructions" class="mt-4" style="display: none;">
-                        <!-- PayPal Instructions -->
-                        <div id="paypalInstructions" class="payment-instructions">
-                            <div class="alert alert-primary">
-                                <h6><i class="fab fa-paypal"></i> Pago con PayPal</h6>
-                                <p><strong>Instrucciones:</strong></p>
-                                <ol>
-                                    <li>Envía $25 USD a: <strong>cortega@antayperu.com</strong></li>
-                                    <li>En el mensaje incluye tu Hardware ID</li>
-                                    <li>Recibirás tu licencia en 30 minutos</li>
-                                </ol>
-                                
-                                <div class="text-center">
-                                    <a href="https://www.paypal.com/send" target="_blank" class="btn btn-primary btn-lg">
-                                        <i class="fab fa-paypal"></i> Abrir PayPal
-                                    </a>
-                                </div>
-                                
-                                <div class="mt-3 p-3 bg-light rounded">
-                                    <strong>📋 Datos para PayPal:</strong><br>
-                                    <strong>Email:</strong> cortega@antayperu.com<br>
-                                    <strong>Monto:</strong> $25 USD<br>
-                                    <strong>Concepto:</strong> WhatsApp Pro Sender - [TU_HARDWARE_ID]
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Bank Instructions -->
-                        <div id="bankInstructions" class="payment-instructions">
-                            <div class="alert alert-success">
-                                <h6><i class="fas fa-university"></i> Transferencia Bancaria</h6>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="p-3 bg-light rounded mb-3">
-                                            <strong>📋 Datos de Transferencia:</strong><br>
-                                            <strong>Banco:</strong> BCP<br>
-                                            <strong>Cuenta:</strong> 19473489211024 <br>
-                                            <strong>CCI:</strong> 00219417348921102491<br>
-                                            <strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera<br>
-                                            <strong>Monto:</strong> S/ 94 (aprox $25 USD)
-                                        </div>
-                                        
-                                        <strong>📝 Después de transferir:</strong>
-                                        <ol>
-                                            <li>Envía captura del voucher a WhatsApp: +51 921 566 036</li>
-                                            <li>Incluye tu Hardware ID en el mensaje</li>
-                                            <li>Recibirás licencia en 2-6 horas</li>
-                                        </ol>
-                                        
-                                        <div class="text-center">
-                                            <a href="https://wa.me/51921566036" class="btn btn-success">
-                                                📱 Enviar Voucher por WhatsApp
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Digital Wallet Instructions -->
-                        <div id="digitalInstructions" class="payment-instructions">
-                            <div class="alert alert-warning">
-                                <h6><i class="fas fa-mobile-alt"></i> Yape / Plin</h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="p-3 bg-light rounded">
-                                            <strong>📱 Número para Yape/Plin:</strong><br>
-                                            <h4 class="text-center text-primary">+51 921 566 036</h4>
-                                            <strong>💰 Monto:</strong> S/ 94<br>
-                                            <strong>Concepto:</strong> WhatsApp Pro Sender
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>📝 Después del pago:</strong>
-                                        <ol>
-                                            <li>Envía captura a WhatsApp: +51 921 566 036</li>
-                                            <li>Incluye tu Hardware ID</li>
-                                            <li>Licencia en 30 minutos</li>
-                                        </ol>
-                                        
-                                        <div class="text-center">
-                                            <a href="https://wa.me/51921566036" class="btn btn-warning">
-                                                📱 Contactar WhatsApp
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Detalles de Pago (Inicialmente ocultos) -->
+                    <div id="paypalDetails" class="payment-details mt-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6>Pagar con PayPal:</h6>
+                            <p>Haz clic en el botón de PayPal para completar tu pago de $25 USD.</p>
+                            <a href="https://www.paypal.com/paypalme/antayperu/25" target="_blank" class="btn btn-primary w-100">
+                                <i class="fab fa-paypal"></i> Pagar con PayPal
+                            </a>
                         </div>
                     </div>
                     
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-outline-secondary" onclick="goToStep1()">
-                            ← Volver a Datos
-                        </button>
+                    <div id="bankDetails" class="payment-details mt-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6>Pagar con Transferencia Bancaria:</h6>
+                            <p>Realiza una transferencia de $25 USD a la siguiente cuenta:</p>
+                            <p><strong>Banco:</strong> BCP</p>
+                            <p><strong>Número de Cuenta:</strong> 191-987654321-0-00</p>
+                            <p><strong>Titular:</strong> Antay Perú S.A.C.</p>
+                            <p>Una vez realizada la transferencia, envía el comprobante por WhatsApp para activar tu licencia.</p>
+                            <button type="button" class="btn btn-success" onclick="enviarVoucherWhatsApp('transferencia')">
+                                📱 Enviar Voucher por WhatsApp
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <div class="text-center w-100">
-                    <small class="text-muted">
-                        🔒 Compra segura • 💚 Garantía 60 días • 📞 Soporte incluido
-                    </small>
+                    
+                    <div id="yapePlinDetails" class="payment-details mt-4" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6>Pagar con Yape / Plin:</h6>
+                            <p>Realiza un Yape o Plin de S/ 94 (equivalente a $25 USD) al siguiente número:</p>
+                            <p><strong>Número:</strong> +51 921 566 036</p>
+                            <p><strong>Titular:</strong> Carlos Ortega</p>
+                            <p>Una vez realizado el pago, envía el comprobante por WhatsApp para activar tu licencia.</p>
+                            <button type="button" class="btn btn-warning" onclick="enviarVoucherWhatsApp('yape/plin')">
+                                📱 Enviar Voucher por WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary mt-3" onclick="goToStep1()">
+                        ← Volver a Datos
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ESTILOS Y FUNCIONES DEL MODAL -->
-<style>
-.payment-method {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.payment-method:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: #28a745;
-}
-
-.payment-method.selected {
-    border-color: #28a745;
-    background-color: #f8fff9;
-}
-
-.payment-instructions {
-    display: none;
-}
-
-.checkout-step {
-    min-height: 400px;
-}
-</style>
-
-<script>
-// Función para mostrar instrucciones Hardware ID
-function showHardwareInstructions() {
-    const instructions = document.getElementById('hardwareInstructions');
-    instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
-}
-
-// Función para ir al paso 2
-function goToStep2() {
-    // Validar formulario
-    const form = document.getElementById('customerForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-    
-    // Capturar datos
-    const customerData = {
-        name: document.getElementById('customerName').value,
-        email: document.getElementById('customerEmail').value,
-        whatsapp: document.getElementById('customerWhatsApp').value,
-        country: document.getElementById('customerCountry').value,
-        hardwareId: document.getElementById('hardwareId').value
-    };
-
-    // ✅ AGREGAR ESTA LÍNEA PARA ENVIAR AL CRM:
-    enviarDatosACRM({
-        nombre: customerData.name,
-        email: customerData.email,
-        whatsapp: customerData.whatsapp,
-        pais: customerData.country,
-        hardwareId: customerData.hardwareId,
-        metodoPago: 'Seleccionando método'
-    });
-    
-    // Mostrar resumen
-    document.getElementById('summaryName').textContent = customerData.name;
-    document.getElementById('summaryEmail').textContent = customerData.email;
-    document.getElementById('summaryHardware').textContent = customerData.hardwareId;
-    
-    // Mostrar/ocultar métodos según país
-    if (customerData.country !== 'PE') {
-        document.getElementById('digitalWalletOption').style.display = 'none';
-    } else {
-        document.getElementById('digitalWalletOption').style.display = 'block';
-    }
-    
-    // Cambiar paso
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
-}
-
-// Función para volver al paso 1
-function goToStep1() {
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step1').style.display = 'block';
-}
-
-// Función para seleccionar método de pago
-function selectPaymentMethod(method) {
-    // Limpiar selecciones
-    document.querySelectorAll('.payment-method').forEach(el => {
-        el.classList.remove('selected');
-    });
-    
-    // Ocultar todas las instrucciones
-    document.querySelectorAll('.payment-instructions').forEach(el => {
-        el.style.display = 'none';
-    });
-    
-    // Seleccionar método
-    event.target.closest('.payment-method').classList.add('selected');
-    
-    // Mostrar instrucciones correspondientes
-    document.getElementById('paymentInstructions').style.display = 'block';
-    
-    switch(method) {
-        case 'paypal':
-            document.getElementById('paypalInstructions').style.display = 'block';
-            break;
-        case 'bank':
-            document.getElementById('bankInstructions').style.display = 'block';
-            break;
-        case 'digital':
-            document.getElementById('digitalInstructions').style.display = 'block';
-            break;
-    }
-    
-    // Analytics tracking
-    if (typeof gtag !== 'undefined') {
-        gtag('event', 'payment_method_selected', {
-            'event_category': 'checkout',
-            'event_label': method,
-            'value': 25
-        });
-    }
-}
-
-// Función para trackear intención de compra
-function trackPurchaseIntent() {
-    if (typeof gtag !== 'undefined') {
-        gtag('event', 'purchase_intent', {
-            'event_category': 'checkout',
-            'event_label': 'modal_opened',
-            'value': 25
-        });
-    }
-}
-
-
-// ===== SISTEMA DE CONVERSIÓN AUTOMÁTICA =====
-// 🎯 CONFIGURACIÓN FÁCIL - SOLO CAMBIAR ESTOS 2 VALORES:
-const PRECIO_USD = 25;        // ← Cambiar precio aquí (sin símbolo $)
-const TIPO_CAMBIO_PEN = 3.75; // ← Actualizar tipo de cambio aquí
-
-// ===== NO TOCAR EL CÓDIGO DE ABAJO =====
-// Calcular automáticamente el precio en soles
-const PRECIO_SOLES = Math.round(PRECIO_USD * TIPO_CAMBIO_PEN);
-
-// Función para actualizar TODOS los precios automáticamente
-function actualizarPreciosAutomatico() {
-    console.log(`💰 Actualizando precios: $${PRECIO_USD} USD = S/ ${PRECIO_SOLES}`);
-    
-    try {
-        // 1. Actualizar título del modal
-        const modalTitle = document.querySelector('#checkoutModal .modal-title');
-        if (modalTitle) {
-            modalTitle.innerHTML = `<i class="fas fa-unlock"></i> Desbloquear Versión Completa - $${PRECIO_USD} USD`;
-        }
-        
-        // 2. Actualizar precio en tarjeta principal
-        const precioCard = document.querySelector('.card h2');
-        if (precioCard) {
-            precioCard.innerHTML = `Actívalo hoy por solo $${PRECIO_USD} USD <small class="text-muted">sin pagos mensuales</small>`;
-        }
-        
-        // 3. Actualizar transferencia bancaria
-        const transferenciaMonto = document.querySelector('#bankInstructions strong');
-        if (transferenciaMonto) {
-            // Buscar el elemento que contiene "Monto:"
-            const elementoMonto = Array.from(document.querySelectorAll('#bankInstructions strong'))
-                .find(el => el.textContent.includes('Monto:'));
-            if (elementoMonto && elementoMonto.parentElement) {
-                const contenido = elementoMonto.parentElement.innerHTML;
-                const nuevoContenido = contenido.replace(
-                    /<strong>Monto:<\/strong>[^<]*/,
-                    `<strong>Monto:</strong> S/ ${PRECIO_SOLES} (aprox $${PRECIO_USD} USD)`
-                );
-                elementoMonto.parentElement.innerHTML = nuevoContenido;
-            }
-        }
-        
-        // 4. Actualizar Yape/Plin
-        const yapeMonto = document.querySelector('#digitalInstructions strong');
-        if (yapeMonto) {
-            const elementoMontoYape = Array.from(document.querySelectorAll('#digitalInstructions strong'))
-                .find(el => el.textContent.includes('Monto:'));
-            if (elementoMontoYape && elementoMontoYape.parentElement) {
-                const contenido = elementoMontoYape.parentElement.innerHTML;
-                const nuevoContenido = contenido.replace(
-                    /<strong>Monto:<\/strong>[^<]*/,
-                    `<strong>Monto:</strong> S/ ${PRECIO_SOLES}`
-                );
-                elementoMontoYape.parentElement.innerHTML = nuevoContenido;
-            }
-        }
-        
-        // 5. Actualizar PayPal
-        const paypalMonto = document.querySelector('#paypalInstructions ol');
-        if (paypalMonto) {
-            const primerLi = paypalMonto.querySelector('li');
-            if (primerLi) {
-                primerLi.innerHTML = `Envía $${PRECIO_USD} USD a: <strong>cortega@antayperu.com</strong>`;
-            }
-        }
-        
-        // 6. Actualizar datos PayPal en la caja
-        const paypalDatos = document.querySelector('#paypalInstructions .bg-light.rounded');
-        if (paypalDatos) {
-            const contenido = paypalDatos.innerHTML;
-            const nuevoContenido = contenido.replace(
-                /<strong>Monto:<\/strong>[^<]*/,
-                `<strong>Monto:</strong> $${PRECIO_USD} USD`
-            );
-            paypalDatos.innerHTML = nuevoContenido;
-        }
-        
-        // 7. Actualizar Analytics
-        window.PRECIO_PRODUCTO = PRECIO_USD;
-        
-        console.log(`✅ Precios actualizados correctamente`);
-        
-    } catch (error) {
-        console.error('❌ Error actualizando precios:', error);
-    }
-}
-
-// Ejecutar cuando la página termine de cargar
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando sistema de conversión automática...');
-    // Esperar un poco para que todo esté listo
-    setTimeout(actualizarPreciosAutomatico, 1000);
-});
-
-// También ejecutar cuando se abra el modal de checkout
-document.addEventListener('click', function(e) {
-    if (e.target && (e.target.matches('[data-bs-target="#checkoutModal"]') || e.target.closest('[data-bs-target="#checkoutModal"]'))) {
-        console.log('🛒 Modal de checkout abierto - actualizando precios...');
-        setTimeout(actualizarPreciosAutomatico, 500);
-    }
-});
-
-// Función para cambiar precios desde consola (para testing)
-function cambiarPrecio(nuevoPrecioUSD, nuevoTipoCambio = TIPO_CAMBIO_PEN) {
-    window.PRECIO_USD = nuevoPrecioUSD;
-    window.TIPO_CAMBIO_PEN = nuevoTipoCambio;
-    window.PRECIO_SOLES = Math.round(nuevoPrecioUSD * nuevoTipoCambio);
-    
-    console.log(`💱 Precio cambiado a: $${nuevoPrecioUSD} USD = S/ ${window.PRECIO_SOLES}`);
-    
-    // Actualizar variables globales
-    const script = document.querySelector('script');
-    if (script) {
-        // Re-ejecutar actualización
-        actualizarPreciosAutomatico();
-    }
-}
-
-console.log(`💰 Sistema cargado: $${PRECIO_USD} USD = S/ ${PRECIO_SOLES} (TC: ${TIPO_CAMBIO_PEN})`);
-</script>
 </body>
 </html>
