@@ -911,7 +911,7 @@ function actualizarPreciosAutomatico() {
         // 2. Actualizar precio en tarjeta principal
         const precioCard = document.querySelector('.card h2');
         if (precioCard) {
-            precioCard.innerHTML = `$${PRECIO_USD} USD <small class="text-muted">pago único</small>`;
+            precioCard.innerHTML = `Solo por hoy $${PRECIO_USD} USD <small class="text-muted">pago único</small>`;
         }
         
         // 3. Actualizar transferencia bancaria
