@@ -586,7 +586,7 @@ async function obtenerDatosAdicionales() {
     }
 }
 
-// Función principal para enviar datos al CRM (SOLO AL FINAL DEL PROCESO)
+// Función principal para enviar datos al CRM (SOLO AL FINAL DEL PROCESO) - MEJORADA
 async function enviarDatosACRM(datosFormulario) {
     try {
         console.log("🚀 Enviando datos al CRM automático (REGISTRO FINAL)...");
@@ -615,15 +615,17 @@ async function enviarDatosACRM(datosFormulario) {
             // Crear función callback única
             const callbackName = "crmCallback_" + Date.now();
             
-            // Timeout para el JSONP
+            // Timeout mejorado para móviles
             const timeoutId = setTimeout(() => {
                 if (window[callbackName]) {
                     delete window[callbackName];
                     const script = document.querySelector(`script[src*="${callbackName}"]`);
-                    if (script) document.head.removeChild(script);
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
                 }
-                reject(new Error("Timeout: El servidor tardó demasiado en responder"));
-            }, 10000); // 10 segundos de timeout
+                reject(new Error("La conexión tardó demasiado. Por favor, verifica tu conexión a internet e inténtalo de nuevo."));
+            }, 15000); // 15 segundos de timeout para móviles
             
             // Definir callback global
             window[callbackName] = function(resultado) {
@@ -643,15 +645,21 @@ async function enviarDatosACRM(datosFormulario) {
                     });
                 }
                 
-                // Limpiar callback
-                delete window[callbackName];
-                const script = document.querySelector(`script[src*="${callbackName}"]`);
-                if (script) document.head.removeChild(script);
+                // Limpiar callback de forma segura
+                try {
+                    delete window[callbackName];
+                    const script = document.querySelector(`script[src*="${callbackName}"]`);
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                } catch (cleanupError) {
+                    console.warn("⚠️ Error menor al limpiar callback:", cleanupError);
+                }
                 
                 resolve(resultado);
             };
             
-            // Crear script JSONP
+            // Crear script JSONP con manejo de errores mejorado
             const script = document.createElement("script");
             const url = WEBHOOK_URL +
                 "?callback=" + callbackName +
@@ -660,17 +668,66 @@ async function enviarDatosACRM(datosFormulario) {
             script.src = url;
             script.onerror = function() {
                 clearTimeout(timeoutId);
-                delete window[callbackName];
-                document.head.removeChild(script);
-                reject(new Error("Error de red al conectar con el servidor"));
+                try {
+                    delete window[callbackName];
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                } catch (cleanupError) {
+                    console.warn("⚠️ Error menor al limpiar script:", cleanupError);
+                }
+                reject(new Error("Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo."));
             };
             
-            document.head.appendChild(script);
+            // Agregar script al DOM
+            try {
+                document.head.appendChild(script);
+            } catch (appendError) {
+                clearTimeout(timeoutId);
+                reject(new Error("Error interno. Por favor, recarga la página e inténtalo de nuevo."));
+            }
         });
         
     } catch (error) {
         console.error("❌ Error enviando datos al CRM:", error);
         return { success: false, error: error.message };
+    }
+}
+
+// Función para limpiar el formulario después del envío exitoso
+function limpiarFormulario() {
+    try {
+        // Limpiar campos del formulario
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerEmail").value = "";
+        document.getElementById("customerWhatsApp").value = "";
+        document.getElementById("customerCountry").selectedIndex = 0;
+        document.getElementById("hardwareId").value = "";
+        
+        // Limpiar datos globales
+        datosClienteGlobal = {};
+        
+        // Resetear estado de procesamiento
+        isProcessing = false;
+        
+        // Ocultar detalles de pago
+        document.getElementById("paypalDetails").style.display = "none";
+        document.getElementById("bankDetails").style.display = "none";
+        document.getElementById("yapePlinDetails").style.display = "none";
+        
+        // Quitar selección de métodos de pago
+        document.querySelectorAll(".payment-method").forEach(card => {
+            card.classList.remove("border-primary", "border-3");
+        });
+        
+        // Volver al paso 1
+        document.getElementById("step2").style.display = "none";
+        document.getElementById("step1").style.display = "block";
+        
+        console.log("✅ Formulario limpiado exitosamente");
+        
+    } catch (error) {
+        console.error("❌ Error al limpiar formulario:", error);
     }
 }
 
@@ -844,7 +901,7 @@ function goToStep1() {
     }
 }
 
-// NUEVA FUNCIÓN OPTIMIZADA: Enviar voucher por WhatsApp Y REGISTRAR EN CRM
+// NUEVA FUNCIÓN OPTIMIZADA: Enviar voucher por WhatsApp Y REGISTRAR EN CRM - MEJORADA
 async function enviarVoucherWhatsApp(metodo) {
     // Validamos que tengamos los datos del cliente
     if (!datosClienteGlobal.hardwareId) {
@@ -860,6 +917,12 @@ async function enviarVoucherWhatsApp(metodo) {
 
     isProcessing = true;
 
+    // Mostrar indicador de carga si es posible
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="loading-spinner"></span> Procesando...';
+    button.disabled = true;
+
     try {
         // AQUÍ ES DONDE ENVIAMOS LOS DATOS AL CRM (AL FINAL DEL PROCESO)
         console.log("🎯 MOMENTO CLAVE: Enviando datos al CRM porque el cliente confirmó el pago");
@@ -872,7 +935,8 @@ async function enviarVoucherWhatsApp(metodo) {
         
         if (!crmResult || !crmResult.success) {
             console.error("❌ Error al registrar en CRM:", crmResult?.error);
-            // Continuamos con WhatsApp aunque falle el CRM
+            // Mostrar mensaje de error más amigable pero continuar con WhatsApp
+            alert("Hubo un problema al guardar tus datos, pero puedes continuar con el pago. Nuestro equipo revisará tu solicitud manualmente.");
         } else {
             console.log("✅ Datos registrados exitosamente en CRM");
         }
@@ -903,20 +967,28 @@ async function enviarVoucherWhatsApp(metodo) {
             });
         }
 
-        // Cerrar el modal después de enviar
+        // Cerrar el modal después de un breve delay
         setTimeout(() => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
             if (modal) {
                 modal.hide();
             }
-        }, 1000);
+            
+            // Limpiar formulario después de cerrar el modal
+            setTimeout(() => {
+                limpiarFormulario();
+            }, 500);
+        }, 1500);
 
         console.log("🎉 PROCESO COMPLETADO: Datos registrados en CRM y WhatsApp abierto");
 
     } catch (error) {
         console.error("❌ Error en el proceso final:", error);
-        alert(`Hubo un error al procesar tu solicitud: ${error.message}\n\nPor favor, inténtalo de nuevo.`);
+        alert(`Hubo un error al procesar tu solicitud: ${error.message}\n\nPor favor, inténtalo de nuevo o contáctanos directamente por WhatsApp.`);
     } finally {
+        // Restaurar botón
+        button.innerHTML = originalText;
+        button.disabled = false;
         isProcessing = false;
     }
 }
@@ -1070,9 +1142,10 @@ async function enviarVoucherWhatsApp(metodo) {
                         <div class="alert alert-info">
                             <h6>Pagar con Transferencia Bancaria:</h6>
                             <p>Realiza una transferencia de $25 USD a la siguiente cuenta:</p>
-                            <p><strong>Banco:</strong> BCP</p>
-                            <p><strong>Número de Cuenta:</strong> 191-987654321-0-00</p>
-                            <p><strong>Titular:</strong> Antay Perú S.A.C.</p>
+                            <p><strong>Banco:</strong> Banco de Crédito del Perú - BCP</p>
+                            <p><strong>Número de Cuenta:</strong> 19473489211024</p>
+                            <p><strong>CCI:</strong> 00219417348921102491</p>
+                            <p><strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera</p>
                             <p>Una vez realizada la transferencia, envía el comprobante por WhatsApp para activar tu licencia.</p>
                             <button type="button" class="btn btn-success" onclick="enviarVoucherWhatsApp('Transferencia Bancaria')">
                                 📱 Enviar Voucher por WhatsApp
@@ -1085,7 +1158,7 @@ async function enviarVoucherWhatsApp(metodo) {
                             <h6>Pagar con Yape / Plin:</h6>
                             <p>Realiza un Yape o Plin de S/ 94 (equivalente a $25 USD) al siguiente número:</p>
                             <p><strong>Número:</strong> +51 921 566 036</p>
-                            <p><strong>Titular:</strong> Carlos Ortega</p>
+                            <p><strong>Titular:</strong> Engels Camilo Ortega Fuentes Rivera</p>
                             <p>Una vez realizado el pago, envía el comprobante por WhatsApp para activar tu licencia.</p>
                             <button type="button" class="btn btn-warning" onclick="enviarVoucherWhatsApp('Yape/Plin')">
                                 📱 Enviar Voucher por WhatsApp
@@ -1104,4 +1177,3 @@ async function enviarVoucherWhatsApp(metodo) {
 
 </body>
 </html>
-
