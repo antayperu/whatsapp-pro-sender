@@ -741,7 +741,47 @@
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Hardware ID (se genera automáticamente)</label>
-                                    <input type="text" class="form-control" id="hardwareId" readonly>
+                    <!-- CAMBIO: Sustituimos el campo de ID generado por uno manual con instrucciones -->
+                    <!-- Colocar esto en el lugar donde estaba el input con ID 'hardwareId' en el primer HTML -->
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Hardware ID (copiarlo desde tu computadora)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="hardwareId" placeholder="Ejemplo: A1B2C3D4E5F6G7H8" required>
+                            <button type="button" class="btn btn-outline-primary" onclick="toggleHardwareInstructions()">
+                                ❓ ¿Cómo obtenerlo?
+                            </button>
+                        </div>
+                        <small class="text-muted">Este ID vincula tu licencia a tu computadora. Es único y se obtiene desde el software.</small>
+                    </div>
+                    
+                    <!-- Instrucciones de cómo obtener el Hardware ID -->
+                    <div id="hardwareInstructions" class="alert alert-info" style="display: none;">
+                        <h6>🔧 ¿Cómo obtener tu Hardware ID?</h6>
+                        <ol class="mb-0">
+                            <li>Abre el programa <strong>WhatsApp Pro Sender</strong> en tu computadora.</li>
+                            <li>Haz clic en <strong>"Activar versión completa"</strong> en el menú.</li>
+                            <li>Verás un campo que muestra tu <strong>Hardware ID</strong>.</li>
+                            <li>Copialo y pégalo aquí para generar tu licencia.</li>
+                        </ol>
+                    </div>
+                    
+                    <script>
+                        function toggleHardwareInstructions() {
+                            const div = document.getElementById("hardwareInstructions");
+                            div.style.display = div.style.display === "none" ? "block" : "none";
+                        }
+                    
+                        // Eliminamos cualquier intento previo de generación automática
+                        window.addEventListener('DOMContentLoaded', () => {
+                            const autoIdInput = document.getElementById('hardwareId');
+                            if (autoIdInput) {
+                                autoIdInput.value = '';
+                            }
+                        });
+                    </script>
+
+                                    
                                     <small class="text-muted">Este ID único vincula la licencia a tu computadora</small>
                                 </div>
                             </div>
