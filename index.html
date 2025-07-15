@@ -455,7 +455,79 @@
             </div>
         </div>
     </section>
+    
+        </section>
 
+    <!-- Manual Descargable Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="h1 mb-4">
+                        <i class="fas fa-book text-primary me-3"></i>
+                        Manual Completo GRATUITO
+                    </h2>
+                    <p class="lead mb-4">
+                        Guía profesional de 50+ páginas con todo lo que necesitas saber
+                    </p>
+                    
+                    <!-- Manual Preview Card -->
+                    <div class="card mx-auto" style="max-width: 500px;">
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                                <h5 class="card-title">Manual de Usuario Completo</h5>
+                                <p class="text-muted">WhatsApp Pro Sender v3.0 - Sistema Seguro</p>
+                            </div>
+                            
+                            <div class="manual-features mb-4">
+                                <h6 class="fw-bold mb-3">✅ Lo que incluye:</h6>
+                                <div class="row text-start">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>Instalación paso a paso</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Configuración completa</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Plantillas de Excel</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>Casos de uso reales</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Resolución de problemas</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Soporte técnico</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <a href="https://drive.google.com/uc?export=download&id=1j7FIs9m7Q92qufS8_NrDa3-TLpXbYpGq" 
+                               class="btn btn-danger btn-lg w-100 mb-3"
+                               target="_blank"
+                               onclick="trackManualDownload()">
+                                <i class="fas fa-download me-2"></i>
+                                DESCARGAR MANUAL GRATIS
+                            </a>
+                            
+                            <p class="small text-muted mb-0">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Descarga segura • 50+ páginas • Formato PDF
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Testimonial del Manual -->
+                    <div class="mt-4">
+                        <p class="text-muted fst-italic">
+                            "Manual súper completo, me ayudó a configurar todo en 30 minutos" 
+                            <strong>- Carlos M., Usuario</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
     <!-- Features Section -->
     <section class="py-5 bg-light">
         <div class="container">
@@ -1300,6 +1372,22 @@ Estado: ${datos.estado}
             console.log('Dispositivo detectado:', detectarDispositivo());
             console.log('Es Android:', esAndroid());
         });
+    </script>
+    <script>
+    // Tracking descarga de manual
+    function trackManualDownload() {
+        // Google Analytics
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'manual_download', {
+                'event_category': 'engagement',
+                'event_label': 'manual_pdf_download',
+                'value': 1
+            });
+        }
+        
+        // Log para debugging
+        console.log('Manual PDF descargado');
+    }
     </script>
 </body>
 </html>
