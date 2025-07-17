@@ -373,12 +373,16 @@
                             <li><i class="fas fa-arrow-right text-primary me-2"></i>Todas las funciones principales</li>
                         </ul>
                     </div>
-                    <a href="https://drive.google.com/file/d/1qU-XdHU3bVkuYeFnSjfqnFGj-xk4TbMW/view?usp=sharing" 
-                       class="btn-download" download>
-                        <i class="fas fa-download me-2"></i>Descargar Demo Gratis
+                    <!-- 🔥 CAMBIO PRINCIPAL: OneDrive en lugar de Google Drive -->
+                    <a href="https://1drv.ms/f/c/d36df18864d3e888/Egub20xEA7JIjyAB-Eyl_rkBtMnFL7fmTSNEhYzegiUBug?e=wsKfwB" 
+                       class="btn-download" 
+                       target="_blank"
+                       onclick="trackDownloadOneDrive()">
+                        <i class="fas fa-download me-2"></i>Descargar Demo Gratis (OneDrive)
                     </a>
+                    <!-- 🔥 CAMBIO SECUNDARIO: Texto actualizado para OneDrive -->
                     <p class="small text-muted mt-2">
-                        <i class="fas fa-shield-alt me-1"></i>Archivo seguro • Windows 10/11 • 15MB
+                        <i class="fas fa-shield-alt me-1"></i>Archivo seguro • Microsoft OneDrive • Descarga directa • Windows 10/11
                     </p>
                 </div>
                 <div class="col-lg-6">
@@ -1016,6 +1020,20 @@
         let metodoPagoSeleccionado = '';
         let processingData = false;
 
+        // 🔥 NUEVA FUNCIÓN: Tracking específico para OneDrive
+        function trackDownloadOneDrive() {
+            console.log('🔥 Download tracking iniciado - OneDrive');
+            
+            // Analytics event específico para OneDrive
+            gtag('event', 'download_demo_onedrive', {
+                'event_category': 'engagement',
+                'event_label': 'onedrive_direct_download',
+                'value': 1
+            });
+            
+            console.log('📊 Analytics: download_demo_onedrive enviado');
+        }
+
         // Generar Hardware ID único
         function generarHardwareId() {
             const canvas = document.createElement('canvas');
@@ -1369,7 +1387,8 @@ Estado: ${datos.estado}
             // Generar Hardware ID inicial
             document.getElementById('hardwareId').value = generarHardwareId();
             
-            console.log('WhatsApp Pro Sender Landing Page cargada');
+            console.log('🚀 WhatsApp Pro Sender Landing Page cargada');
+            console.log('📦 OneDrive integration active');
             console.log('Dispositivo detectado:', detectarDispositivo());
             console.log('Es Android:', esAndroid());
         });
